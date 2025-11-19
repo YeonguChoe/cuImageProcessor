@@ -1,2 +1,3 @@
 # cuImageProcessor
-CUDA Image Processor
+- grayscale
+- resize
