@@ -1,13 +1,10 @@
-# cuImageProcessor
+# cuImageProcessor: CUDA Bitmap Image Processor
 ### Image processing
 - resize
 - crop
 - flip
 - mirror
 - grayscale
-
-### Supported file format
-- bmp
 
 ### Example
 - [cuImageProcessor-examples](https://github.com/YeonguChoe/cuImageProcessor-examples)
