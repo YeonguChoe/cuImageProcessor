@@ -1,7 +1,6 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include <cuda.h>
-#include <string>
 
 __global__ void cuda_grayscale(unsigned char *image, int width, int height, int channels)
 {
@@ -22,10 +21,10 @@ __global__ void cuda_grayscale(unsigned char *image, int width, int height, int 
     }
 }
 
-bool grayscale(const std::string &filename)
+bool grayscale(const char *filename)
 {
     int width, height, channels;
-    unsigned char *cpu_image = stbi_load(filename.c_str(), &width, &height, &channels, 0);
+    unsigned char *cpu_image = stbi_load(filename, &width, &height, &channels, 0);
 
     // allocate image to gpu
     unsigned char *gpu_image = nullptr;
@@ -42,14 +41,19 @@ bool grayscale(const std::string &filename)
     cudaMemcpy(result_image, gpu_image, width * height * 1, cudaMemcpyDeviceToHost);
 
     // save image
-    std::string grayscale_filename = "grayscale_";
-    grayscale_filename.append(filename);
-    stbi_write_png(grayscale_filename.c_str(), width, height, 1, result_image, width * 1);
+    char *prefix = "grayscale_";
+    size_t prefix_length = strlen(prefix);
+    size_t filename_length = strlen(filename);
+    char *grayscale_filename = (char *)malloc(prefix_length + filename_length + 1);
+    strcpy(grayscale_filename, prefix);
+    strcat(grayscale_filename, filename);
+    stbi_write_png(grayscale_filename, width, height, 1, result_image, width * 1);
 
     // free memory
     delete[] result_image;
     cudaFree(gpu_image);
     stbi_image_free(cpu_image);
+    free(grayscale_filename);
 
     return true;
 }

@@ -1,7 +1,6 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include <cuda.h>
-#include <string>
 
 // kernel runs once, processing the image simultaneously
 // each thread process each pixel in original image
@@ -28,10 +27,10 @@ __global__ void resize(unsigned char *original_image, int original_width, int or
     }
 }
 
-bool resize(const std::string &filename, int width, int height)
+bool resize(const char *filename, int width, int height)
 {
     int original_width, original_height, channels;
-    unsigned char *cpu_image = stbi_load(filename.c_str(), &original_width, &original_height, &channels, 0);
+    unsigned char *cpu_image = stbi_load(filename, &original_width, &original_height, &channels, 0);
 
     // cpu -> gpu
     unsigned char *gpu_image = nullptr;
@@ -55,14 +54,20 @@ bool resize(const std::string &filename, int width, int height)
     cudaMemcpy(resized_cpu_image, resized_gpu_image, width * height * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
 
     // save to file
-    std::string resize_filename = "resize_" + filename;
-    stbi_write_png(resize_filename.c_str(), width, height, channels, resized_cpu_image, width * channels);
+    const char *prefix = "resize_";
+    size_t filename_length = strlen(filename);
+    size_t prefix_length = strlen(prefix);
+    char *resize_filename = (char *)malloc(prefix_length + filename_length + 1);
+    strcpy(resize_filename, prefix);
+    strcat(resize_filename, filename);
+    stbi_write_png(resize_filename, width, height, channels, resized_cpu_image, width * channels);
 
     // free memory
     cudaFree(gpu_image);
     cudaFree(resized_gpu_image);
     stbi_image_free(cpu_image);
     free(resized_cpu_image);
+    free(resize_filename);
 
     return true;
 }
