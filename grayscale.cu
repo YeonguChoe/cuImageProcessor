@@ -1,5 +1,3 @@
-#include "stb_image.h"
-#include "stb_image_write.h"
 #include <cuda.h>
 
 __global__ void cuda_grayscale(unsigned char *image, int width, int height, int channels)
@@ -21,7 +19,7 @@ __global__ void cuda_grayscale(unsigned char *image, int width, int height, int 
     }
 }
 
-bool grayscale(const char *filename)
+__host__ bool grayscale(const char *filename)
 {
     int width, height, channels;
     unsigned char *cpu_image = stbi_load(filename, &width, &height, &channels, 0);

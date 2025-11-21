@@ -13,11 +13,7 @@ set(CUDA_SOURCES
     resize.cu
 )
 
-set(CPP_SOURCES
-    stb_image_wrapper.cpp
-)
-
-add_library(${PROJECT_NAME} SHARED ${CUDA_SOURCES} ${CPP_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${CUDA_SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

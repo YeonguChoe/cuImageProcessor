@@ -1,5 +1,3 @@
-#include "stb_image.h"
-#include "stb_image_write.h"
 #include <cuda.h>
 
 // kernel runs once, processing the image simultaneously
@@ -27,7 +25,7 @@ __global__ void resize(unsigned char *original_image, int original_width, int or
     }
 }
 
-bool resize(const char *filename, int width, int height)
+__host__ bool resize(const char *filename, int width, int height)
 {
     int original_width, original_height, channels;
     unsigned char *cpu_image = stbi_load(filename, &original_width, &original_height, &channels, 0);

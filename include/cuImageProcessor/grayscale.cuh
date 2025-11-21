@@ -1,6 +1,6 @@
 #ifndef GRAYSCALE_H
 #define GRAYSCALE_H
 
-bool grayscale(const char *filename);
+__host__ bool grayscale(const char *filename);
 
 #endif
