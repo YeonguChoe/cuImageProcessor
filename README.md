@@ -1,7 +1,10 @@
 # cuImageProcessor
 ### Image processing
-- grayscale
 - resize
+- crop
+- flip
+- mirror
+- grayscale
 
 # Operating System
 - Linux
