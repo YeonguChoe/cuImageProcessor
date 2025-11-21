@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <cuda.h>
+#include "bitmap.cuh"
 
 // kernel runs once, processing the image simultaneously
 // each thread process each pixel in original image
@@ -27,7 +30,16 @@ __global__ void resize(unsigned char *original_image, int original_width, int or
 
 __host__ bool resize(const char *filename, int width, int height)
 {
-    int original_width, original_height, channels;
+
+    FILE *file = fopen(filename, "rb");
+
+    BMPFileHeader fileHeader;
+    fread(&fileHeader, sizeof(BMPFileHeader), 1, file);
+
+    
+
+    int original_width,
+        original_height, channels;
     unsigned char *cpu_image = stbi_load(filename, &original_width, &original_height, &channels, 0);
 
     // cpu -> gpu
