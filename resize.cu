@@ -13,8 +13,16 @@ __global__ void resize(PixelData *original_image, int original_width, int origin
     // blockIdx: block's coordinate within the grid
     // blockDim (constant value): block dimension
     // threadIdx: thread's coordinate within a block
-    int i = (blockDim.x * blockIdx.x) + threadIdx.x;
-    int j = (blockDim.y * blockIdx.y) + threadIdx.y;
+    // i, j: coordinate of resized image
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    // i: [0, width-1]
+    // j: [0, height-1]
+    if (i >= width || j >= height)
+    {
+        return;
+    }
 
     float scale_to_original_i = (float)original_width / (float)width;
     float scale_to_original_j = (float)original_height / (float)height;
@@ -25,13 +33,13 @@ __global__ void resize(PixelData *original_image, int original_width, int origin
 
     for (int channel = 0; channel < channels; ++channel)
     {
-        resized_image[((width * j) + i) * channels + channel] = original_image[((original_width * pixel_at_original_j) + pixel_at_original_i) * channels + channel];
+        resized_image[((width * j) + i) * channels + channel] =
+            original_image[((original_width * pixel_at_original_j) + pixel_at_original_i) * channels + channel];
     }
 }
 
 bool resize(const char *filename, int width, int height)
 {
-
     // Read BMP file
     FILE *file = fopen(filename, "rb");
 
