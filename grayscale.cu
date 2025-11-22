@@ -19,7 +19,7 @@
 //     }
 // }
 
-// __host__ bool grayscale(const char *filename)
+// bool grayscale(const char *filename)
 // {
 //     int width, height, channels;
 //     unsigned char *cpu_image = stbi_load(filename, &width, &height, &channels, 0);

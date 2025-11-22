@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <cuda.h>
+#include <cuda_runtime.h>
 #include "resize.cuh"
 #include "bitmap.cuh"
 
@@ -29,7 +29,7 @@ __global__ void resize(PixelData *original_image, int original_width, int origin
     }
 }
 
-__host__ bool resize(const char *filename, int width, int height)
+bool resize(const char *filename, int width, int height)
 {
 
     // Read BMP file
