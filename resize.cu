@@ -85,12 +85,18 @@ bool resize(const char *filename, int width, int height)
     strcpy(resized_filename, prefix);
     strcat(resized_filename, filename);
 
-    // save to file
-    FILE *resized_file = fopen(resized_filename, "wb");
-    fwrite(resized_cpu_image, sizeof(BitmapHeader), 1, resized_file);
-
     // new image padding
     int padding = (4 - width * channels % 4) % 4;
+
+    // Update bitmapHeader
+    bitmapHeader.bitmapInfoHeader.width = width;
+    bitmapHeader.bitmapInfoHeader.height = height;
+    bitmapHeader.bitmapInfoHeader.sizeImage = (width * channels + padding) * height;
+    bitmapHeader.bitmapFileHeader.size = bitmapHeader.bitmapFileHeader.offset + (width * channels + padding) * height;
+
+    // save to file
+    FILE *resized_file = fopen(resized_filename, "wb");
+    fwrite(&bitmapHeader, sizeof(BitmapHeader), 1, resized_file);
 
     for (int h = 0; h < height; ++h)
     {
