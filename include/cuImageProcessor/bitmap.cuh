@@ -31,17 +31,21 @@ typedef struct
 } BitmapInfoHeader;
 #pragma pack(pop)
 
+#pragma pack(push, 1)
 typedef struct
 {
     BitmapFileHeader bitmapFileHeader;
     BitmapInfoHeader bitmapInfoHeader;
 } BitmapHeader;
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 typedef struct
 {
     uint8_t blue;
     uint8_t green;
     uint8_t red;
 } PixelData;
+#pragma pack(pop)
 
 #endif

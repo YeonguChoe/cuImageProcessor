@@ -31,11 +31,10 @@ __global__ void resize(PixelData *original_image, int original_width, int origin
     int pixel_at_original_i = (int)(i * scale_to_original_i);
     int pixel_at_original_j = (int)(j * scale_to_original_j);
 
-    for (int channel = 0; channel < channels; ++channel)
-    {
-        resized_image[((width * j) + i) * channels + channel] =
-            original_image[((original_width * pixel_at_original_j) + pixel_at_original_i) * channels + channel];
-    }
+    int destination_index = (width * j) + i;
+    int source_index = (original_width * pixel_at_original_j) + pixel_at_original_i;
+
+    resized_image[destination_index] = original_image[source_index];
 }
 
 bool resize(const char *filename, int width, int height)
