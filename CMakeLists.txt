@@ -9,7 +9,7 @@ find_package(CUDA REQUIRED)
 include_directories(${PROJECT_SOURCE_DIR}/include/cuImageProcessor)
 
 set(CUDA_SOURCES
-    grayscale.cu
+    # grayscale.cu
     resize.cu
 )
 

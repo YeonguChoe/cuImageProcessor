@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda.h>
+#include "resize.cuh"
 #include "bitmap.cuh"
 
 // kernel runs once, processing the image simultaneously
 // each thread process each pixel in original image
-__global__ void resize(unsigned char *original_image, int original_width, int original_height,
-                       unsigned char *resized_image, int width, int height, int channels)
+__global__ void resize(PixelData *original_image, int original_width, int original_height,
+                       PixelData *resized_image, int width, int height, int channels)
 {
     // grid size is resized image size
     // blockIdx: block's coordinate within the grid
@@ -31,53 +32,83 @@ __global__ void resize(unsigned char *original_image, int original_width, int or
 __host__ bool resize(const char *filename, int width, int height)
 {
 
+    // Read BMP file
     FILE *file = fopen(filename, "rb");
 
-    BMPFileHeader fileHeader;
-    fread(&fileHeader, sizeof(BMPFileHeader), 1, file);
+    BitmapHeader bitmapHeader;
+    fread(&bitmapHeader, sizeof(BitmapHeader), 1, file);
 
-    
+    int original_width = bitmapHeader.bitmapInfoHeader.width;
+    int original_height = bitmapHeader.bitmapInfoHeader.height;
+    int channels = bitmapHeader.bitmapInfoHeader.bitCount / 8;
+    int original_padding = (4 - original_width * channels % 4) % 4;
 
-    int original_width,
-        original_height, channels;
-    unsigned char *cpu_image = stbi_load(filename, &original_width, &original_height, &channels, 0);
+    // CPU image
+    PixelData *cpu_image = (PixelData *)malloc(original_width * original_height * sizeof(PixelData));
+    fseek(file, bitmapHeader.bitmapFileHeader.offset, SEEK_SET);
 
-    // cpu -> gpu
-    unsigned char *gpu_image = nullptr;
-    cudaMalloc(&gpu_image, original_width * original_height * channels * sizeof(unsigned char));
-    cudaMemcpy(gpu_image, cpu_image, original_width * original_height * channels * sizeof(unsigned char), cudaMemcpyHostToDevice);
+    for (int h = 0; h < original_height; ++h)
+    {
+        fread(cpu_image + (original_width * h), sizeof(PixelData), original_width, file);
+        fseek(file, original_padding, SEEK_CUR);
+    }
 
-    // output at gpu
-    unsigned char *resized_gpu_image = nullptr;
-    cudaMalloc(&resized_gpu_image, width * height * channels * sizeof(unsigned char));
+    fclose(file);
+
+    // GPU image
+    PixelData *gpu_image = nullptr;
+    cudaMalloc(&gpu_image, original_width * original_height * sizeof(PixelData));
+    cudaMemcpy(gpu_image, cpu_image, original_width * original_height * sizeof(PixelData), cudaMemcpyHostToDevice);
+
+    // resized GPU image
+    PixelData *resized_gpu_image = nullptr;
+    cudaMalloc(&resized_gpu_image, width * height * sizeof(PixelData));
 
     // kernel setup
     dim3 threadsPerBlock(32, 32);
     dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                    (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+
     // run kernel
     resize<<<numBlocks, threadsPerBlock>>>(gpu_image, original_width, original_height,
                                            resized_gpu_image, width, height, channels);
 
-    // gpu -> cpu
-    unsigned char *resized_cpu_image = (unsigned char *)malloc(width * height * channels * sizeof(unsigned char));
-    cudaMemcpy(resized_cpu_image, resized_gpu_image, width * height * channels * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+    // GPU -> CPU
+    PixelData *resized_cpu_image = (PixelData *)malloc(width * height * sizeof(PixelData));
+    cudaMemcpy(resized_cpu_image, resized_gpu_image, width * height * sizeof(PixelData), cudaMemcpyDeviceToHost);
 
-    // save to file
-    const char *prefix = "resize_";
+    // create filename
+    const char *prefix = "resized_";
     size_t filename_length = strlen(filename);
     size_t prefix_length = strlen(prefix);
-    char *resize_filename = (char *)malloc(prefix_length + filename_length + 1);
-    strcpy(resize_filename, prefix);
-    strcat(resize_filename, filename);
-    stbi_write_png(resize_filename, width, height, channels, resized_cpu_image, width * channels);
+    char *resized_filename = (char *)malloc(prefix_length + filename_length + 1);
+    strcpy(resized_filename, prefix);
+    strcat(resized_filename, filename);
+
+    // save to file
+    FILE *resized_file = fopen(resized_filename, "wb");
+    fwrite(resized_cpu_image, sizeof(BitmapHeader), 1, resized_file);
+
+    // new image padding
+    int padding = (4 - width * channels % 4) % 4;
+
+    for (int h = 0; h < height; ++h)
+    {
+        fwrite(resized_cpu_image + (width * h), sizeof(PixelData), width, resized_file);
+        for (int p = 0; p < padding; ++p)
+        {
+            fputc(0, resized_file);
+        }
+    }
+
+    fclose(resized_file);
 
     // free memory
+    free(cpu_image);
     cudaFree(gpu_image);
     cudaFree(resized_gpu_image);
-    stbi_image_free(cpu_image);
     free(resized_cpu_image);
-    free(resize_filename);
+    free(resized_filename);
 
     return true;
 }

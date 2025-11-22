@@ -1,5 +1,5 @@
-#ifndef RESIZE_H
-#define RESIZE_H
+#ifndef RESIZE_CUH
+#define RESIZE_CUH
 
 __host__ bool resize(const char *filename, int width, int height);
 

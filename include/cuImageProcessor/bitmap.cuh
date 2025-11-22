@@ -11,7 +11,7 @@ typedef struct
     uint16_t reserved1;
     uint16_t reserved2;
     uint32_t offset;
-} BMPFileHeader;
+} BitmapFileHeader;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
@@ -28,14 +28,14 @@ typedef struct
     int32_t yPelsPerMeter;
     uint32_t colorsUsed;
     uint32_t colorsImportant;
-} DIBHeader;
+} BitmapInfoHeader;
 #pragma pack(pop)
 
 typedef struct
 {
-    BMPFileHeader header;
-    DIBHeader infoHeader;
-} BMPHeader;
+    BitmapFileHeader bitmapFileHeader;
+    BitmapInfoHeader bitmapInfoHeader;
+} BitmapHeader;
 
 typedef struct
 {
