@@ -1,5 +1,5 @@
-#ifndef BITMAP_H
-#define BITMAP_H
+#ifndef BITMAP_CUH
+#define BITMAP_CUH
 
 #include <stdint.h>
 

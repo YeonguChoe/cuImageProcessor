@@ -7,13 +7,14 @@
 // kernel runs once, processing the image simultaneously
 // each thread process each pixel in original image
 __global__ void resize(PixelData *original_image, int original_width, int original_height,
-                       PixelData *resized_image, int width, int height, int channels)
+                       PixelData *resized_image, int width, int height)
 {
     // grid size is resized image size
     // blockIdx: block's coordinate within the grid
     // blockDim (constant value): block dimension
     // threadIdx: thread's coordinate within a block
     // i, j: coordinate of resized image
+    // Concurrent programming
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -37,7 +38,7 @@ __global__ void resize(PixelData *original_image, int original_width, int origin
     resized_image[destination_index] = original_image[source_index];
 }
 
-bool resize(const char *filename, int width, int height)
+__host__ bool resize(const char *filename, int width, int height)
 {
     // Read BMP file
     FILE *file = fopen(filename, "rb");
@@ -78,7 +79,7 @@ bool resize(const char *filename, int width, int height)
 
     // run kernel
     resize<<<numBlocks, threadsPerBlock>>>(gpu_image, original_width, original_height,
-                                           resized_gpu_image, width, height, channels);
+                                           resized_gpu_image, width, height);
 
     // GPU -> CPU
     PixelData *resized_cpu_image = (PixelData *)malloc(width * height * sizeof(PixelData));

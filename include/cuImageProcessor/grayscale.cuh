@@ -1,6 +1,4 @@
-// #ifndef GRAYSCALE_H
-// #define GRAYSCALE_H
+#ifndef GRAYSCALE_CUH
+#define GRAYSCALE_CUH
 
-// bool grayscale(const char *filename);
-
-// #endif
+#endif

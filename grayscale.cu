@@ -1,57 +1,51 @@
-// #include <cuda.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cuda_runtime.h>
+#include "grayscale.cuh"
+#include "bitmap.cuh"
 
-// __global__ void cuda_grayscale(unsigned char *image, int width, int height, int channels)
-// {
-//     int i = blockIdx.x * blockDim.x + threadIdx.x;
-//     int j = blockIdx.y * blockDim.y + threadIdx.y;
+__host__ bool grayscale(const char *filename)
+{
+    // Read BMP file
+    FILE *file = fopen(filename, "rb");
 
-//     if (i < width && j < height)
-//     {
-//         int idx = (j * width + i) * channels;
-//         unsigned char red = image[idx];
-//         unsigned char green = image[idx + 1];
-//         unsigned char blue = image[idx + 2];
+    BitmapHeader bitmapHeader;
+    fread(&bitmapHeader, sizeof(BitmapHeader), 1, file);
 
-//         unsigned char gray = static_cast<unsigned char>(0.299f * red + 0.587 * green + 0.114f * blue);
+    int width = bitmapHeader.bitmapInfoHeader.width;
+    int height = bitmapHeader.bitmapInfoHeader.height;
+    int channels = bitmapHeader.bitmapInfoHeader.bitCount / 8;
+    int padding = (4 - width * channels % 4) % 4;
 
-//         // overwrite
-//         image[idx] = gray;
-//     }
-// }
+    // CPU image
+    // allocate memory
+    PixelData **cpu_image = (PixelData **)malloc(height * sizeof(PixelData *));
+    for (int h = 0; h < height; ++h)
+    {
+        cpu_image[h] = (PixelData *)malloc(width * sizeof(PixelData));
+    }
 
-// bool grayscale(const char *filename)
-// {
-//     int width, height, channels;
-//     unsigned char *cpu_image = stbi_load(filename, &width, &height, &channels, 0);
+    // copy image data to cpu_image
+    fseek(file, bitmapHeader.bitmapFileHeader.offset, SEEK_SET);
 
-//     // allocate image to gpu
-//     unsigned char *gpu_image = nullptr;
-//     cudaMalloc(&gpu_image, width * height * channels);
-//     cudaMemcpy(gpu_image, cpu_image, width * height * channels, cudaMemcpyHostToDevice);
+    for (int h = 0; h < height; ++h)
+    {
+        for (int w = 0; w < width; ++w)
+        {
+            fread(&cpu_image[h][w], sizeof(PixelData), 1, file);
+        }
+        fseek(file, padding, SEEK_CUR);
+    }
 
-//     dim3 threadsPerBlock(32, 32);
-//     dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x, (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    fclose(file);
 
-//     // run kernel
-//     cuda_grayscale<<<numBlocks, threadsPerBlock>>>(gpu_image, width, height, 3);
+    // GPU image
+    PixelData **gpu_image = nullptr;
+    size_t gpu_image_pitch;
+    cudaMallocPitch(&gpu_image, &gpu_image_pitch, width * sizeof(PixelData), height);
 
-//     unsigned char *result_image = new unsigned char[width * height];
-//     cudaMemcpy(result_image, gpu_image, width * height * 1, cudaMemcpyDeviceToHost);
 
-//     // save image
-//     char *prefix = "grayscale_";
-//     size_t prefix_length = strlen(prefix);
-//     size_t filename_length = strlen(filename);
-//     char *grayscale_filename = (char *)malloc(prefix_length + filename_length + 1);
-//     strcpy(grayscale_filename, prefix);
-//     strcat(grayscale_filename, filename);
-//     stbi_write_png(grayscale_filename, width, height, 1, result_image, width * 1);
 
-//     // free memory
-//     delete[] result_image;
-//     cudaFree(gpu_image);
-//     stbi_image_free(cpu_image);
-//     free(grayscale_filename);
 
-//     return true;
-// }
+    return true;
+}
