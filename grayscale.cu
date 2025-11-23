@@ -4,6 +4,25 @@
 #include "grayscale.cuh"
 #include "bitmap.cuh"
 
+__global__ void grayscale(PixelData *devPtr, size_t pitch, int width, int height)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int j = blockDim.y * blockIdx.y + threadIdx.y;
+
+    if (i >= width || j >= height)
+    {
+        return;
+    }
+
+    PixelData *pixelPtr = (PixelData *)((char *)devPtr + j * pitch) + i;
+
+    uint8_t gray = (uint8_t)(0.299f * pixelPtr->red + 0.587f * pixelPtr->green + 0.114f * pixelPtr->blue);
+
+    pixelPtr->red = gray;
+    pixelPtr->green = gray;
+    pixelPtr->blue = gray;
+}
+
 __host__ bool grayscale(const char *filename)
 {
     // Read BMP file
@@ -19,11 +38,7 @@ __host__ bool grayscale(const char *filename)
 
     // CPU image
     // allocate memory
-    PixelData **cpu_image = (PixelData **)malloc(height * sizeof(PixelData *));
-    for (int h = 0; h < height; ++h)
-    {
-        cpu_image[h] = (PixelData *)malloc(width * sizeof(PixelData));
-    }
+    PixelData cpu_image[height][width];
 
     // copy image data to cpu_image
     fseek(file, bitmapHeader.bitmapFileHeader.offset, SEEK_SET);
@@ -40,12 +55,54 @@ __host__ bool grayscale(const char *filename)
     fclose(file);
 
     // GPU image
-    PixelData **gpu_image = nullptr;
-    size_t gpu_image_pitch;
-    cudaMallocPitch(&gpu_image, &gpu_image_pitch, width * sizeof(PixelData), height);
+    PixelData *gpu_image;
+    size_t pitch;
+    // pitch is calculated automatically
+    cudaMallocPitch(&gpu_image, &pitch, width * sizeof(PixelData), height);
+    cudaMemcpy2D(gpu_image, pitch,
+                 cpu_image, width * sizeof(PixelData),
+                 width * sizeof(PixelData), height,
+                 cudaMemcpyHostToDevice);
 
+    dim3 threadsPerBlock(32, 32);
+    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    grayscale<<<numBlocks, threadsPerBlock>>>(gpu_image, pitch, width, height);
 
+    // GPU -> CPU
+    PixelData *grayscaled_cpu_image = (PixelData *)malloc(width * height * sizeof(PixelData));
+    cudaMemcpy2D(grayscaled_cpu_image, width * sizeof(PixelData),
+                 gpu_image, pitch,
+                 width * sizeof(PixelData), height,
+                 cudaMemcpyDeviceToHost);
 
+    // create filename
+    const char *prefix = "grayscaled_";
+    size_t filename_length = strlen(filename);
+    size_t prefix_length = strlen(prefix);
+    char *grayscaled_filename = (char *)malloc(prefix_length + filename_length + 1);
+    strcpy(grayscaled_filename, prefix);
+    strcat(grayscaled_filename, filename);
+
+    // save to file
+    FILE *grayscaled_file = fopen(grayscaled_filename, "wb");
+    fwrite(&bitmapHeader, sizeof(BitmapHeader), 1, grayscaled_file);
+
+    for (int h = 0; h < height; ++h)
+    {
+        fwrite(grayscaled_cpu_image + (width * h), sizeof(PixelData), width, grayscaled_file);
+        for (int p = 0; p < padding; ++p)
+        {
+            fputc(0, grayscaled_file);
+        }
+    }
+
+    fclose(grayscaled_file);
+
+    // free memory
+    free(grayscaled_cpu_image);
+    free(grayscaled_filename);
+    cudaFree(gpu_image);
 
     return true;
 }
