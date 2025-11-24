@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda_runtime.h>
-#include "resize.cuh"
 #include "bitmap.cuh"
+#include "resize.cuh"
 
 // kernel runs once, processing the image simultaneously
 // each thread process each pixel in original image

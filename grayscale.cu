@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda_runtime.h>
-#include "grayscale.cuh"
 #include "bitmap.cuh"
+#include "grayscale.cuh"
 
 __global__ void grayscale(PixelData *devPtr, size_t pitch, int width, int height)
 {
@@ -67,6 +67,7 @@ __host__ bool grayscale(const char *filename)
     dim3 threadsPerBlock(32, 32);
     dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
                    (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+                   
     grayscale<<<numBlocks, threadsPerBlock>>>(gpu_image, pitch, width, height);
 
     // GPU -> CPU
