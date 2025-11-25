@@ -41,19 +41,16 @@ __host__ bool rotate(char *filename)
     int padding = (4 - width * channels % 4) % 4;
 
     // CPU image
-    PixelData **cpu_image = (PixelData **)malloc(height * sizeof(PixelData *));
-    for (int h = 0; h < height; ++h)
-    {
-        *(cpu_image + h) = (PixelData *)malloc(width * sizeof(PixelData));
-    }
+    PixelData *cpu_image = (PixelData *)malloc(width * height * sizeof(PixelData));
 
     fseek(file, bitmapHeader.bitmapFileHeader.offset, SEEK_SET);
 
     for (int h = 0; h < height; ++h)
     {
-        fread(*(cpu_image + h), sizeof(PixelData), width, file);
+        fread(cpu_image + (width * h), sizeof(PixelData), width, file);
         fseek(file, padding, SEEK_CUR);
     }
+
     fclose(file);
 
     // GPU image
@@ -116,12 +113,7 @@ __host__ bool rotate(char *filename)
     fclose(rotated_file);
 
     // free memory
-    for (int h = 0; h < height; ++h)
-    {
-        free(cpu_image[h]);
-    }
     free(cpu_image);
-
     free(cropped_cpu_image);
     free(rotated_filename);
     cudaFree(gpu_image);
