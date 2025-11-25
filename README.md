@@ -2,9 +2,9 @@
 ### Image processing
 - resize
 - crop
-- flip
-- mirror
+- rotate
 - grayscale
+- flip
 
 ### Example
 - [cuImageProcessor-examples](https://github.com/YeonguChoe/cuImageProcessor-examples)
