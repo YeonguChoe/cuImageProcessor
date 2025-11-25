@@ -17,9 +17,10 @@ __global__ void rotate(PixelData *original_gpu_image, int original_width, int or
         return;
     }
 
-    // rotated_image[i][j] = original_image[j][width-1-i]
-    int original_i = original_width - 1 - rotated_j;
+    // Source(x, y) -> Dest(y, Width - 1 - x)
+    // Source Row (y) = Dest Col (i)
     int original_j = rotated_i;
+    int original_i = original_width - 1 - rotated_j;
 
     PixelData *source = (PixelData *)((char *)original_gpu_image + original_pitch * original_j) + original_i;
     PixelData *destination = (PixelData *)((char *)rotated_gpu_image + rotated_pitch * rotated_j) + rotated_i;
@@ -78,7 +79,8 @@ __host__ bool rotate(char *filename)
     PixelData *cropped_cpu_image = (PixelData *)malloc(width * height * sizeof(PixelData));
     cudaMemcpy2D(cropped_cpu_image, height * sizeof(PixelData),
                  rotated_gpu_image, rotated_pitch,
-                 height, width * sizeof(PixelData),
+                 height * sizeof(PixelData),
+                 width,
                  cudaMemcpyDeviceToHost);
 
     // save to file
