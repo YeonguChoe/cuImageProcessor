@@ -12,8 +12,8 @@ __global__ void crop(PixelData *original_image, int original_pitch, int start_i,
 
     if (i < crop_width && j < crop_height)
     {
-        PixelData *source = original_image + ((start_j + j) * original_pitch) + (start_i + i);
-        PixelData *destination = cropped_image + j * cropped_pitch + i;
+        PixelData *source = (PixelData *)((char *)original_image + (start_j + j) * original_pitch) + (start_i + i);
+        PixelData *destination = (PixelData *)((char *)cropped_image + j * cropped_pitch) + i;
         *destination = *source;
     }
 }
