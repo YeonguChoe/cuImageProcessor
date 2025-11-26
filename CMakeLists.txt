@@ -11,6 +11,7 @@ set(CUDA_SOURCES
     grayscale.cu
     crop.cu
     rotate.cu
+    flip.cu
 )
 
 add_library(${PROJECT_NAME} SHARED ${CUDA_SOURCES})
