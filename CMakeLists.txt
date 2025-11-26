@@ -8,8 +8,8 @@ include_directories(${PROJECT_SOURCE_DIR}/include/cuImageProcessor)
 
 set(CUDA_SOURCES
     resize.cu
-    grayscale.cu
     crop.cu
+    grayscale.cu
     rotate.cu
     flip.cu
 )

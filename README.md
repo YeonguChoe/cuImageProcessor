@@ -2,8 +2,8 @@
 ### Image processing
 - resize
 - crop
-- rotate
 - grayscale
+- rotate
 - flip
 
 ### Example
