@@ -1,5 +1,9 @@
 # cuImageProcessor: CUDA Bitmap Image Processor
 
+
+![Banner](docs/banner.png)
+
+
 cuImageProcessor is a C/C++ library for bitmap image processing, supporting operations such as resizing, cropping, grayscale conversion, rotation, and horizontal or vertical flipping. cuImageProcessor uses NVIDIA CUDA to accelerate image processing tasks.
 
 ## Installation
