@@ -109,7 +109,7 @@ int main()
 ## Example Code
 - [cuImageProcessor-examples](https://github.com/YeonguChoe/cuImageProcessor-examples)
 
-## Supported Operating System
+## Supported Operating Systems
 - Linux
 - Windows
 
