@@ -21,6 +21,26 @@ __global__ void flip_horizontal(PixelData *gpu_image, size_t pitch, int width, i
     *(row + width - 1 - i) = temp;
 }
 
+__global__ void flip_vertical(PixelData *gpu_image, size_t pitch, int width, int height)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int j = blockDim.y * blockIdx.y + threadIdx.y;
+
+    // set range
+
+    if (i >= width || j >= height / 2)
+    {
+        return;
+    }
+
+    PixelData *top_row = (PixelData *)((char *)gpu_image + pitch * j);
+    PixelData *bottom_row = (PixelData *)((char *)gpu_image + pitch * (height - 1 - j));
+
+    PixelData temp = *(top_row + i);
+    *(top_row + i) = *(bottom_row + i);
+    *(bottom_row + i) = temp;
+}
+
 __host__ bool flip_horizontal(char *filename)
 {
     // Read BMP file
@@ -32,7 +52,7 @@ __host__ bool flip_horizontal(char *filename)
     int width = bitmapHeader.bitmapInfoHeader.width;
     int height = bitmapHeader.bitmapInfoHeader.height;
     int channels = bitmapHeader.bitmapInfoHeader.bitCount / 8;
-    int padding = (4 - width * channels % 4) % 4;
+    int padding = (4 - ((width * channels) % 4)) % 4;
 
     // CPU image
     PixelData *cpu_image = (PixelData *)malloc(height * width * sizeof(PixelData));
@@ -97,26 +117,6 @@ __host__ bool flip_horizontal(char *filename)
     cudaFree(gpu_image);
 
     return true;
-}
-
-__global__ void flip_vertical(PixelData *gpu_image, size_t pitch, int width, int height)
-{
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
-    int j = blockDim.y * blockIdx.y + threadIdx.y;
-
-    // set range
-
-    if (i >= width || j >= height / 2)
-    {
-        return;
-    }
-
-    PixelData *top_row = (PixelData *)((char *)gpu_image + pitch * j);
-    PixelData *bottom_row = (PixelData *)((char *)gpu_image + pitch * (height - 1 - j));
-
-    PixelData temp = *(top_row + i);
-    *(top_row + i) = *(bottom_row + i);
-    *(bottom_row + i) = temp;
 }
 
 __host__ bool flip_vertical(char *filename)
