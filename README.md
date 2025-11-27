@@ -13,6 +13,9 @@ cuImageProcessor is a C/C++ library for bitmap image processing, supporting oper
 
 ## Operations
 ### Resize
+
+Resizes the image to the specified width and height.
+
 #### Parameters
 - filename: char*
 - width: int
@@ -29,6 +32,9 @@ int main()
 ```
 
 ### Crop
+
+Crops the specified area of the image.
+
 #### Parameters
 - filename: char*
 - start_x: int
@@ -48,6 +54,9 @@ int main()
 ```
 
 ### Grayscale
+
+Converts the image to grayscale.
+
 #### Parameters
 - filename: char*
 
@@ -63,6 +72,9 @@ int main()
 ```
 
 ### Rotate
+
+Rotates the image counterclockwise.
+
 #### Parameters
 - filename: char*
 #### Example
@@ -77,6 +89,9 @@ int main()
 ```
 
 ### Horizontal Flip
+
+Flips the image horizontally.
+
 #### Parameters
 - filename: char*
 #### Example
@@ -91,6 +106,9 @@ int main()
 ```
 
 ### Vertical Flip
+
+Flips the image vertically.
+
 #### Parameters
 - filename: char*
 #### Example
